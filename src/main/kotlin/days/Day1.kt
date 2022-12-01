@@ -2,9 +2,9 @@ package days
 
 class Day1 : Day(1) {
 
-    private val totals = inputString.split(Regex("^$", RegexOption.MULTILINE))
-        .map { it.lines().filterNot { it.isNullOrBlank() } }
-        .map { it.sumOf { it.toInt() } }
+    private val totals = inputList.fold(listOf(0)) { acc, elem ->
+        if (elem.isBlank()) acc + 0 else acc.dropLast(1) + (acc.last() + elem.toInt())
+    }
 
     override fun partOne(): Any {
         return totals.max()
