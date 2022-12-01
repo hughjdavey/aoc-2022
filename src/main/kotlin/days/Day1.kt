@@ -2,16 +2,15 @@ package days
 
 class Day1 : Day(1) {
 
+    private val totals = inputString.split(Regex("^$", RegexOption.MULTILINE))
+        .map { it.lines().filterNot { it.isNullOrBlank() } }
+        .map { it.sumOf { it.toInt() } }
+
     override fun partOne(): Any {
-        return inputList.take(2)
-            .map { it.uppercase() }
-            .joinToString(" ")
+        return totals.max()
     }
 
     override fun partTwo(): Any {
-        return inputString.split("\n")
-            .filterNot { it.isEmpty() }
-            .map { it.uppercase() }
-            .last()
+        return totals.sortedDescending().take(3).sum()
     }
 }
