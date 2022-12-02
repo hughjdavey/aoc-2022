@@ -33,3 +33,8 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.register<JavaExec>("startDay") {
+    mainClass.set("util.DayCreator")
+    classpath = sourceSets["main"].runtimeClasspath
+}
