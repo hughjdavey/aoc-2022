@@ -1,22 +1,25 @@
 package days
 
+import xyz.hughjd.aocutils.Lists.split
 import java.util.Stack
 
 class Day5 : Day(5) {
 
-    private val blankLine = inputList.indexOf("")
+    private val inputs = inputList.split("")
 
-    private val moves = getMoves(inputList.subList(blankLine + 1, inputList.size))
+    private val moves = getMoves(inputs[1])
 
     override fun partOne(): Any {
-        val stacks = getStacks(inputList.subList(0, blankLine))
-        moves.forEach { move9000(it, stacks) }
-        return stacks.map(Stack<Char>::pop).joinToString("")
+        return moveStacks(this::move9000)
     }
 
     override fun partTwo(): Any {
-        val stacks = getStacks(inputList.subList(0, blankLine))
-        moves.forEach { move9001(it, stacks) }
+        return moveStacks(this::move9001)
+    }
+
+    private fun moveStacks(moveFn: (move: Move, stacks: List<Stack<Char>>) -> Unit): String {
+        val stacks = getStacks(inputs[0])
+        moves.forEach { moveFn(it, stacks) }
         return stacks.map(Stack<Char>::pop).joinToString("")
     }
 
@@ -47,12 +50,13 @@ class Day5 : Day(5) {
         fun getMoves(movesInput: List<String>): List<Move> {
             return movesInput.map { move ->
                 val matches = Regex(".+?(\\d+).+?(\\d+).+?(\\d+)").matchEntire(move)!!.groupValues.drop(1)
-                matches.map { it.toInt() } }.map { Move(it[0], it[1], it[2]) }
+                matches.map { it.toInt() }
+            }.map { Move(it[0], it[1], it[2]) }
         }
 
         private fun getLetterOrNull(str: String, index: Int): Char? {
             val char = str.getOrNull(index)
-            return if (char == null) null else if (char in 'a'..'z' || char in 'A'..'Z') char else null
+            return if (char == null) null else if (Character.isAlphabetic(char.code)) char else null
         }
     }
 }

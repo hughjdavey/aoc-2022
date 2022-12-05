@@ -101,7 +101,6 @@ class Day5Test {
         assertThat(stacks[2].toList().reversed(), contains('P'))
 
         day5.move9001(moves[0], stacks)
-        System.err.println(stacks)
         assertThat(stacks[0].toList().reversed(), contains('D', 'N', 'Z'))
         assertThat(stacks[1].toList().reversed(), contains('C', 'M'))
         assertThat(stacks[2].toList().reversed(), contains('P'))
