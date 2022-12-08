@@ -1,6 +1,6 @@
 package days
 
-import xyz.hughjd.aocutils.Lists.split
+import xyz.hughjd.aocutils.Collections.split
 import java.util.Stack
 
 class Day5 : Day(5) {

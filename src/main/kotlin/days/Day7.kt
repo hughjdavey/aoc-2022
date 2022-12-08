@@ -1,6 +1,6 @@
 package days
 
-import xyz.hughjd.aocutils.Lists.indicesOf
+import xyz.hughjd.aocutils.Collections.indicesOf
 
 class Day7 : Day(7) {
 
