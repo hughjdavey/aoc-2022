@@ -1,123 +1,76 @@
 package days
 
 import xyz.hughjd.aocutils.Collections.stackOf
-import java.util.Stack
+import xyz.hughjd.aocutils.Tuples.product
 
 class Day10 : Day(10) {
 
+    val program = inputList.map {
+        if (it == "noop") Noop() else {
+            val parts = it.split(" ")
+            AddX(v = parts[1].toInt())
+        }
+    }
+
     override fun partOne(): Any {
-        return CPU().run(getProgram(), listOf(20, 60, 100, 140, 180, 220)).sumOf { it.strength }
+        return CPU().run(program)
+            .filter { it.first in listOf(20, 60, 100, 140, 180, 220) }
+            .sumOf { it.product() }
     }
 
     override fun partTwo(): Any {
-        return "\n${CRT().drawScreen(getProgram())}"
+        return "\n${CRT().drawScreen(program)}"
     }
 
-    private fun getProgram(): List<Instruction> {
-        return inputList.map {
-            if (it == "noop") Noop() else {
-                val parts = it.split(" ")
-                AddX(parts[1].toInt())
-            }
-        }
-    }
+    data class CRT(private val pxHeight: Int = 6, private val pxWidth: Int = 40) {
 
-    data class CRT(private val pxHeight: Int = 6, private val pxWidth: Int = 40, private val pxTotal: Int = pxHeight * pxWidth) {
+        private val pxTotal: Int = pxHeight * pxWidth
 
         fun drawScreen(program: List<Instruction>): String {
-            val states = CPU().run(program, List(pxTotal) { index -> index + 1 })
+            val states = CPU().run(program)
             return (0 until pxTotal).map { pixel ->
-                val state = states[pixel]
-                val spritePixels = listOf(state.x - 1, state.x, state.x + 1)
+                val x = states[pixel].second
+                val spritePixels = listOf(x - 1, x, x + 1)
                 if (pixel % 40 in spritePixels) "#" else "."
-            }.chunked(40).joinToString("\n") { it.joinToString("") }
+            }.chunked(pxWidth).joinToString("\n") { it.joinToString("") }
         }
     }
 
-    sealed class Instruction(var cycles: Int)
+    sealed class Instruction {
+        abstract val cycles: Int
+        abstract fun exec(): Instruction
+    }
 
-    class Noop : Instruction(1)
+    data class Noop(override val cycles: Int = 1) : Instruction() {
+        override fun exec() = copy(cycles = cycles - 1)
+    }
 
-    data class AddX(val v: Int) : Instruction(2)
+    data class AddX(override val cycles: Int = 2, val v: Int) : Instruction() {
+        override fun exec() = copy(cycles = cycles - 1)
+    }
 
-    data class SignalStrength(val cycle: Int, val x: Int, val strength: Int = cycle * x)
+    // minor issue with this class is that because of the `takeWhile { !instructions.empty() }`, execution ends
+    // before the program is done (because the stack is empty but the current instruction may have 1 or 2 cycles left)
+    // workaround for now is adding as many extra Noops as the final instruction has cycles at the end which ensure the 'real' instructions get fully executed
+    class CPU {
 
-    data class CPU(private val debug: Boolean = false) {
-
-        private var x: Int = 1
-        private var cycle = 0
-        private lateinit var instructions: Stack<Instruction>
-        private var currentInstruction: Instruction? = null
-
-        private var done: Boolean = false
-
-        fun run(program: List<Instruction>, signalStrengthRequests: List<Int> = emptyList()): List<SignalStrength> {
-            reset(program)
-            val strengths = mutableListOf<SignalStrength>()
-            while (!done) {
-                if (cycle in signalStrengthRequests) {
-                    strengths.add(SignalStrength(cycle, x))
+        fun run(program: List<Instruction>): List<Pair<Int, Int>> {
+            val instructions = stackOf(program + List(program.last().cycles) { Noop() })
+            return generateSequence(Triple(1, 1, instructions.pop())) { (cycle, x, instruction) ->
+                if (instruction.cycles == 1) {
+                    Triple(cycle + 1, runInstruction(instruction, x), instructions.pop())
                 }
-                cycle()
-            }
-            return strengths
-        }
-
-        fun getX(): Int {
-            return x
-        }
-
-        private fun cycle() {
-            if (currentInstruction == null) {
-                if (instructions.empty()) {
-                    debugLog("No more instructions - ending execution")
-                    done = true
-                    return
+                else {
+                    Triple(cycle + 1, x, instruction.exec())
                 }
-                currentInstruction = instructions.pop()
-                debugLog("    New instruction is $currentInstruction")
-            }
-
-            val instruction = currentInstruction!!
-            cycle++
-            debugLog("=== Cycle #$cycle ===")
-            debugLog("Current instruction is $instruction with ${instruction.cycles} cycles remaining")
-
-            if (instruction.cycles == 1) {
-                debugLog("  Running $instruction")
-                runInstruction(instruction)
-            }
-
-            instruction.cycles--
-
-            if (instruction.cycles == 0) {
-                debugLog("    $instruction complete")
-                currentInstruction = null
-            }
-
-            debugLog("After cycle $cycle, register X is $x")
+            }.map { it.first to it.second }.takeWhile { !instructions.empty() }.toList()
         }
 
-        private fun debugLog(message: String) {
-            if (debug) {
-                System.err.println(message)
+        private fun runInstruction(instruction: Instruction, x: Int): Int {
+            return when (instruction) {
+                is AddX -> x + instruction.v
+                is Noop -> x
             }
         }
-
-        private fun reset(program: List<Instruction>) {
-            x = 1
-            cycle = 1
-            instructions = stackOf(program)
-            currentInstruction = instructions.pop()
-            done = false
-        }
-
-        private fun runInstruction(instruction: Instruction) {
-            when (instruction) {
-                is AddX -> x += instruction.v
-                is Noop -> {}
-            }
-        }
-
     }
 }
