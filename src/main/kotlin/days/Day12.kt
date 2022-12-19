@@ -12,11 +12,11 @@ class Day12 : Day(12) {
         return dijkstra(pointsInfo)[pointsInfo.end] ?: 0
     }
 
-    // todo improve performance - takes ~16 mins
+    // todo improve performance - takes ~2 mins
     override fun partTwo(): Any {
         val possibleStarts = pointsInfo.points.filter { it.letter == 'a' }
-        return possibleStarts.map { start -> pointsInfo.copy(start = start.position) }
-            .map { dijkstra(it)[it.end] ?: 0 }.filter { it > 0 }.min()
+        return possibleStarts.parallelStream().map { start -> pointsInfo.copy(start = start.position) }
+            .map { dijkstra(it)[it.end] ?: 0 }.filter { it > 0 }.min(Int::compareTo).orElse(0)
     }
 
     // see https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Pseudocode
