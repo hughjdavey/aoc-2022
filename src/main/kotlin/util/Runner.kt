@@ -3,6 +3,7 @@ package util
 import days.Day
 import org.reflections.Reflections
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimedValue
 import kotlin.time.measureTimedValue
@@ -56,9 +57,25 @@ object Runner {
     }
 
     private fun printParts(partOne: TimedValue<Any>, partTwo: TimedValue<Any>) {
+        val p1Value = partOne.value.toString()
+        val p2Value = partTwo.value.toString()
+
         val padding = max(partOne.value.toString().length, partTwo.value.toString().length) + 14        // 14 is 8 (length of 'Part 1: ') + 6 more
-        println("Part 1: ${partOne.value}".padEnd(padding, ' ') + "(${partOne.duration})")
-        println("Part 2: ${partTwo.value}".padEnd(padding, ' ') + "(${partTwo.duration})")
+
+        var (p1Padding, p2Padding) = padding to padding
+        if (p1Value.contains('\n') && !p2Value.contains('\n')) {
+            p2Padding = lastLineLength(p2Value) + 6
+        }
+        if (!p1Value.contains('\n') && p2Value.contains('\n')) {
+            p1Padding = lastLineLength(p2Value) + 6
+        }
+
+        println("Part 1: ${partOne.value}".padEnd(p1Padding, ' ') + "(${partOne.duration})")
+        println("Part 2: ${partTwo.value}".padEnd(p2Padding, ' ') + "(${partTwo.duration})")
+    }
+
+    private fun lastLineLength(str: String): Int {
+        return str.split('\n').last().length
     }
 
     private fun printError(message: String) {
